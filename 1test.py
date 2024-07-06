@@ -1,6 +1,7 @@
 import serial
 import serial.tools.list_ports
 import logging
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -109,21 +110,32 @@ def main():
 
     # 累积所有数据点
     all_x, all_y = [], []
+    # 记录上次清除的时间
+    last_clear_time = time.time()
 
     def update(i):
-        #global all_x, all_y
+        nonlocal all_x, all_y
+        nonlocal last_clear_time
+
+        current_time = time.time()
+    
+        # 每隔 60 秒清除数据
+        if current_time - last_clear_time >= 60:
+            last_clear_time = current_time
+            all_x, all_y = [], []  # 清空数据
+            ax.clear()
+            ax.set_xlim(-xy_limit, xy_limit)
+            ax.set_ylim(-xy_limit, xy_limit)
 
         x, y = lidar.getData()
         all_x.extend(x)
         all_y.extend(y)
-        ax.clear()
-        ax.set_xlim(-xy_limit, xy_limit)
-        ax.set_ylim(-xy_limit, xy_limit)
+
         ax.scatter(all_x, all_y, s=1)
          # 添加网格线
         ax.grid(True, linestyle='--', linewidth=0.5)
 
-    anim = animation.FuncAnimation(fig, update, frames=1, interval=50)
+    anim = animation.FuncAnimation(fig, update, frames=None, interval=50)
     plt.show()
 
 if __name__ == '__main__':
