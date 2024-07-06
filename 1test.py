@@ -1,4 +1,5 @@
 import serial
+import serial.tools.list_ports
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,7 +17,8 @@ class MiniLidar:
         self.port = port
         self.baudrate = baudrate
         self.ser = None  # 初始化成员变量
-        
+    
+    def open_serial_port(self):
         try:
             self.ser = serial.Serial(port=self.port, baudrate=self.baudrate)
             if not self.ser.is_open:
@@ -26,6 +28,20 @@ class MiniLidar:
         except Exception as e:
             info_string = "串口 {} 打开失败: {}".format(self.port, e)
             logging.warning(info_string)
+            self.input_new_port()
+
+    def list_serial_ports(self):
+        ports = serial.tools.list_ports.comports()
+        print("可用的串口:")
+        for port in ports:
+            print(f"端口: {port.device}, 描述: {port.description}, 硬件 ID: {port.hwid}")
+
+
+    def input_new_port(self):
+        self.list_serial_ports()
+        new_port = input("请输入新的串口编号: ")
+        self.port = new_port
+        self.open_serial_port()
 
 
     def getData(self) -> float:
@@ -77,9 +93,10 @@ class MiniLidar:
 
 def main():
     # 新建雷达对象
-    lidarCom = 'COM4'
+    lidarCom = 'COM3'
     lidarBaudrate = 230400
     lidar = MiniLidar(lidarCom, lidarBaudrate)
+    lidar.open_serial_port()
     
     # 创建一个动画对象
     fig, ax = plt.subplots()
